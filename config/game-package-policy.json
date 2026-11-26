@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "limits": {
+    "maxCompressedBytes": 52428800,
+    "maxUncompressedBytes": 157286400,
+    "maxFiles": 500,
+    "maxSingleFileBytes": 26214400,
+    "maxEntryPathLength": 255
+  },
+  "allowedExtensions": [
+    "html", "htm", "css", "js", "mjs", "json", "svg", "png", "jpg", "jpeg",
+    "gif", "webp", "ico", "mp3", "ogg", "wav", "m4a", "mp4", "webm",
+    "woff", "woff2", "ttf", "txt"
+  ],
+  "deniedExtensions": [
+    "php", "phtml", "phar", "exe", "dll", "so", "sh", "bash", "bat", "cmd",
+    "py", "rb", "pl", "jar", "zip", "tar", "gz", "7z"
+  ],
+  "requiredEntryCandidates": ["index.html", "index.htm"],
+  "reject": {
+    "absolutePaths": true,
+    "parentTraversal": true,
+    "backslashes": true,
+    "nullBytes": true,
+    "symlinks": true,
+    "encryptedEntries": true,
+    "duplicatePaths": true
+  },
+  "notes": "Shared policy source for backend validation, docs and contract tests. Backend config/game-settings.php may reference limits but must not duplicate the lists."
+}

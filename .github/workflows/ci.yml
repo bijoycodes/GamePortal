@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: Backend (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4']
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: gameplatform_test
+          POSTGRES_USER: gameportal
+          POSTGRES_PASSWORD: gameportal_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U gameportal -d gameplatform_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_pgsql, pdo_sqlite, zip, intl, mbstring
+          coverage: none
+          tools: composer:v2
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+      - name: Composer audit
+        working-directory: backend
+        run: composer audit --format=summary
+      - name: Pint
+        working-directory: backend
+        run: vendor/bin/pint --test
+      - name: PHPUnit (in-memory SQLite)
+        working-directory: backend
+        run: php artisan test --display-warnings
+      - name: PostgreSQL migration check
+        working-directory: backend
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: gameplatform_test
+          DB_USERNAME: gameportal
+          DB_PASSWORD: gameportal_test
+        run: php artisan migrate --force --no-interaction
+
+  frontend:
+    name: Frontend (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Unit and component tests
+        working-directory: frontend
+        run: npm run test
+      - name: Production build
+        working-directory: frontend
+        run: npm run build
+      - name: npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: E2E tests
+        working-directory: frontend
+        run: npm run e2e -- --reporter=line
+
+  contract:
+    name: Docs and cross-stack contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare backend env examples for contract check
+        run: |
+          test -f backend/.env.example
+          test -f frontend/.env.example
+      - name: Contract check
+        run: node tests/contract/api-contract.test.mjs
+      - name: Placeholder scan
+        run: bash scripts/check-docs.sh

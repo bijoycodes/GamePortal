@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GameSettings",
+  "type": "object",
+  "additionalProperties": false,
+  "maxProperties": 20,
+  "properties": {
+    "requireFullscreen": { "type": "boolean" },
+    "backgroundColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "publisherId": { "type": "string", "maxLength": 120 },
+    "customCss": { "type": "string", "maxLength": 4096 },
+    "muteByDefault": { "type": "boolean" },
+    "showFps": { "type": "boolean" },
+    "controlsHint": { "type": "string", "maxLength": 240 },
+    "targetScore": { "type": "integer", "minimum": 0, "maximum": 100000000 }
+  }
+}

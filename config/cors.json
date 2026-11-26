@@ -1,0 +1,12 @@
+{
+  "description": "Canonical CORS origin list. Backend config/cors.php reads allowed_origins from APP_FRONTEND_URL in production; this file documents the intended values per environment.",
+  "allowedOrigins": {
+    "local": ["http://localhost:4300", "http://10.10.10.246:4300"],
+    "staging": ["https://staging.example.com"],
+    "production": ["https://play.example.com"]
+  },
+  "allowedMethods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  "allowedHeaders": ["Accept", "Content-Type", "Authorization", "X-Request-Id"],
+  "credentials": false,
+  "maxAge": 600
+}
